@@ -1,46 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const {auth,dataBase} = require('../../../config/config');
+const {dataBase} = require('../../../config/config');
 
-router.post('/:plane/addPost',(req,res)=>{
-    //let user = auth.currentUser;
-    let data = req.body.data;
-    let msn = req.params.msn;
-    let harness = req.params.harness;
-    let weight = req.params.weight;
-    let pressure = req.params.pressure;
-    let temp = req.params.temp;
-    let airport = req.params.airport;
-    let fcl = req.params.fcl;
-    let fcr = req.params.fcr;
-    let fql = req.params.fql;
-    let fqr = req.params.fqr;
-    let altitude = req.params.altitude;
-    let flightno = req.params.flightno;
-    let postref
-    if(req.body.type==="query"){
-        postref=dataBase.ref('plane/'+msn+'/query');
-    }else{
-    postref=dataBase.ref('plane/'+msn+'/post');
-    }
-        //let uid=user.uid;
-        let newKey=postref.push().key;
-        let pushData = {
-            //ownerUid:uid,
-            ownerName:data.fullName,
-            postData:data.post,
-            timestamp:Date.now()
-        }
+//adding data to MSN
+router.post('/planes/addFlight',(req,res)=>{
+    //let user = auth.currentUser
+    let data = req.body;
+    let msn = data["msn"]
+    delete data["msn"];
+    let msnRef = dataBase.ref('planes/MSN/'+msn+'/');
+    msnRef.once('value').then(snapshot=>{
+        let data1 = snapshot.val()
         let updates={}
-        updates[newKey]=pushData
-        postref.update(updates)
-            .then(obj=>{
-    
-                res.status(200).json({message:"added successfully",response:obj});
+        if(data1===null){
+            updates['0']=data;
+            msnRef.update(updates).then(obj=>{
+                res.status(200).json({message:"added successfully",data:obj})
             })
             .catch(err=>{
                 res.status(400).json({error:err})
             })
+        }else{
+            updates[data1.length]=data;
+            msnRef.update(updates).then(obj=>{
+                res.status(200).json({message:"added successfully",data:obj})
+            }).catch(obj=>{
+                res.status(200).json({error:err})
+            })
+        }
+    })
+    .catch(err=>{
+        res.status(400).json({error:err})
+    })
 })
 
-
+module.exports = router;
