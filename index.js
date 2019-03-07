@@ -10,3 +10,10 @@ app.get('/',(req,res)=>{
 //TODO: data manipulation
 
 app.use('/api/data',dataHandle);
+
+
+const port = process.env.PORT || 5000;
+
+app.listen(port,()=>{
+    console.log("airhack-api running on port "+port)
+})
